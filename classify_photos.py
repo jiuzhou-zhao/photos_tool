@@ -5,7 +5,9 @@ import exifread
 import time
 import sys
 import getopt
+import logging
 
+logging.basicConfig(level=logging.ERROR)
 
 def get_original_date(filename):
     try:
@@ -13,7 +15,7 @@ def get_original_date(filename):
     except:
         raise RuntimeError("unopen file[%s]" % filename)
 
-    data = exifread.process_file(fd)
+    data = exifread.process_file(fd, details=False)
     if data:
         try:
             t = data['EXIF DateTimeOriginal']
@@ -27,8 +29,14 @@ def get_original_date(filename):
 
 def classify_photo(src_root, src_file, dst_root, rename_dst_file, cp_flag):
     photo_src = os.path.join(src_root, src_file)
+
+    fn = os.path.basename(photo_src)
+    if fn.startswith("."):
+        return
+
     f, e = os.path.splitext(photo_src)
-    if e.lower() not in ('.jpg', '.jpeg', '.png', '.mp4', '.mov', '.3gp'):
+    if e.lower() not in ('.jpg', '.jpeg', '.png', '.mp4', '.mov', '.3gp', '.dat', '.mp3'):
+        print("ignore file:", photo_src)
         return
 
     info = "文件名: " + photo_src + " "
@@ -51,8 +59,7 @@ def classify_photo(src_root, src_file, dst_root, rename_dst_file, cp_flag):
             shutil.copy2(photo_src, dst_file)
         else:
             shutil.move(photo_src, dst_file)
-    else:
-        print("%s exists" % dst_file)
+        print("%s => %s" % (photo_src, dst_file))
 
 
 def classify_photos(src_root, dst_root, rename_dst_file, cp_flag):
