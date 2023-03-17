@@ -15,13 +15,13 @@ def get_original_date(filename):
     except:
         raise RuntimeError("unopen file[%s]" % filename)
 
-    data = exifread.process_file(fd, details=False)
-    if data:
-        try:
+    try:
+        data = exifread.process_file(fd, details=False)
+        if data:
             t = data['EXIF DateTimeOriginal']
             return str(t).replace(":", ".")[:7]
-        except:
-            pass
+    except:
+        pass
 
     state = os.stat(filename)
     return time.strftime("%Y.%m", time.localtime(state.st_mtime))
@@ -29,6 +29,7 @@ def get_original_date(filename):
 
 def classify_photo(src_root, src_file, dst_root, rename_dst_file, cp_flag):
     photo_src = os.path.join(src_root, src_file)
+    photo_src = photo_src.strip()
 
     fn = os.path.basename(photo_src)
     if fn.startswith("."):
@@ -39,12 +40,11 @@ def classify_photo(src_root, src_file, dst_root, rename_dst_file, cp_flag):
         print("ignore file:", photo_src)
         return
 
-    info = "文件名: " + photo_src + " "
     t = ""
     try:
         t = get_original_date(photo_src)
     except Exception as e:
-        print(info, e)
+        print('get file date failed:[', photo_src, ']; error is', e)
         return
 
     dst_root = os.path.join(dst_root, t)
